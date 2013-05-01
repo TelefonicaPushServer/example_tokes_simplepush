@@ -46,6 +46,7 @@ var Push = (function() {
     // but we can still send notifications...
     var xhr = new XMLHttpRequest();
     xhr.open("PUT",aEndpoint);
+    xhr.overrideMimeType("application/json");
     xhr.onload = function () {
       // We won't really do anything here...
       debugPush && console.log("Push successfully sent to " + aEndpoint);

@@ -286,7 +286,7 @@ var TokesApp = (function () {
 
   function processNotification(aEndpoint) {
     // This should work on an uninitialized app...
-    getNickForEP(aEndpoint,function (aValue) {
+    PushDb.getNickForEP(aEndpoint,function (aValue) {
       if (aValue && aValue.nick) {
         
         var notification = window.navigator.mozNotification.createNotification('Tokes App', 'Got a Toke from ' + aValue.nick);

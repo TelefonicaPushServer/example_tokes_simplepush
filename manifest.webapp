@@ -1,8 +1,8 @@
 {
   "name": "TSimplePush",
   "description": "TokesApp",
-  "type": "web",
   "launch_path": "/index.html",
+  "version": "0.1",
   "developer": {
     "name": "Carmen Jimenez, Antonio M. Amaya",
     "url": "https://github.com/AntonioMA/tsimplepush/"
@@ -19,7 +19,8 @@
   },
   "default_locale": "en-US",
   "icons": {
-    "120": "/style/icons/PushIcon.png"
+    "120": "/style/icons/PushIcon.png",
+    "60": "/style/icons/Sms.png"
   },
   "messages": [
      { "notification": "/index.html"},
