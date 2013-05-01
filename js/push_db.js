@@ -96,7 +96,10 @@ var PushDb = (function () {
     };
   };
 
-                
+  function clearDB() {
+    var store = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME);
+    store.clear();
+  }
 
   init(DB_NAME, DB_VERSION);
 
@@ -105,7 +108,8 @@ var PushDb = (function () {
     setNickForEP: setNickForEP,
     getSelfNick: getNickForEP.bind(undefined,SELF_EP),
     setSelfNick: setNickForEP.bind(undefined,SELF_EP),
-    getRegisteredNicks: getRegisteredNicks
+    getRegisteredNicks: getRegisteredNicks,
+    clearDB: clearDB
   };
 
 })();

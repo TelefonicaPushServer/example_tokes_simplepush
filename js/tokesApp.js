@@ -6,8 +6,8 @@ var TokesApp = (function () {
   var debugTokes = true;
 
   // Toggle this if/when the server side is installed
-  var server = undefined;
-// var server = "http://sigsegv.es/pushExchange.php"
+//  var server = undefined;
+  var server = "http://localhost:8123";
 // GET -> Get friends remote data
 // PUT -> Put friends endpoints and nicks for me
                 
@@ -127,15 +127,13 @@ var TokesApp = (function () {
       }
       xhr.onerror = function (evt){
         debugTokes && debug("sendXHR. XHR failed " + JSON.stringify(evt));
-        // We should call updateFriendList() anyway...
-        aFailureCallback(evt);
+        if (aFailureCallback)
+          aFailureCallback(evt);
       }
 
       xhr.send(aData);
     
   }
-
-
 
   function mixFriends(myRemoteFriends) {
     for (var i in myRemoteFriends) {
@@ -171,7 +169,7 @@ var TokesApp = (function () {
   function loadMyRemoteFriends() {
     // To-Do: This should load the data remotely... if the server is configured and up
     if (server) { // Server side not done yet
-      sendXHR("GET", server, "nick="+selfNick(), mixFriends, updateFriendList);
+      sendXHR("GET", server + "/friend/" + encodeURIComponent(selfNick), null, mixFriends, updateFriendList);
 
     } else {
         // Simulation FTW!
@@ -193,6 +191,12 @@ var TokesApp = (function () {
     }
   }
 
+  function saveFriendsToRemote() {
+    for (var i in myFriends) {
+      sendEndpointToServer(myFriends[i].nick, myFriends[i].endpoint);
+    }
+  }
+
 
   // Self explanatory :P
   function onLoginClick(evt) {
@@ -207,6 +211,7 @@ var TokesApp = (function () {
     mainWrapper.style.display = '';
     PushDb.getRegisteredNicks(function (internalFriends) {
       myFriends = internalFriends;
+      saveFriendsToRemote();
       loadMyRemoteFriends();
     });
     
@@ -225,14 +230,11 @@ var TokesApp = (function () {
   }
 
   function sendEndpointToServer(aNick, aEndpoint) {
-    var dataToSend = JSON.stringify({
-      mySelf: selfNick,
-      nick: aNick,
-      endpoint: aEndpoint
-    });
+    // should URLize selfNick, aNick and aEndPoint... definitely aEndpoint
+    var dataToSend = 'endpoint=' + aEndpoint;
     debugTokes && debug ("Sending " + dataToSend + "to " + server + " (or I will someday anyway) ");
     if (server)
-      sendXHR("PUT", server, dataToSend);
+      sendXHR("PUT", server + "/friend/" + encodeURIComponent(aNick) + "/" + encodeURIComponent(selfNick), dataToSend);
   }
 
   function onAddFriendClick(evt) {
@@ -273,7 +275,7 @@ var TokesApp = (function () {
     document.getElementById("login-form").addEventListener('submit',onLoginClick);
     document.getElementById("add-friend-form").addEventListener('submit',onAddFriendClick);
     loginButton.addEventListener('click',onLoginClick);
-    friendNickField.addEventListener('change', onFriendNickChange);
+    friendNickField.addEventListener('input', onFriendNickChange);
 
     // Register the push handler
     Push.setPushHandler(function (e) {
