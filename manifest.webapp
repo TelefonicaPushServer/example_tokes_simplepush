@@ -1,19 +1,19 @@
 {
-  "name": "Push_A",
-  "description": "Notif. A",
-  "type": "certified",
+  "name": "TSimplePush",
+  "description": "TokesApp",
+  "type": "web",
   "launch_path": "/index.html",
   "developer": {
-    "name": "Fernando Rodriguez Sela, Guillermo López Leal, Albert Crespell Perez",
-    "url": "https://pdihub.hi.inet/frsela/notification-server/"
+    "name": "Carmen Jimenez, Antonio M. Amaya",
+    "url": "https://github.com/AntonioMA/tsimplepush/"
   },
   "locales": {
     "en-US": {
-      "name": "Notif. A",
+      "name": "TokesApp",
       "description": "Test app for push notifications"
     },
     "es": {
-      "name": "Notif. A",
+      "name": "TokesApp",
       "description": "Aplicación de pruebas para notificaciones push"
     }
   },
@@ -27,9 +27,7 @@
      { "push-register": "/index.html"}
   ],
   "permissions": {
-    "systemXHR":{},
     "push": {},
-    "desktop-notification":{},
-    "settings":{ "access": "readonly" }
+    "desktop-notification":{}
   }
 }

@@ -7,7 +7,7 @@ var TokesApp = (function () {
 
   // Toggle this if/when the server side is installed
 //  var server = undefined;
-  var server = "http://localhost:8123";
+  var server = "http://sigsegv.es:8123";
 // GET -> Get friends remote data
 // PUT -> Put friends endpoints and nicks for me
                 
