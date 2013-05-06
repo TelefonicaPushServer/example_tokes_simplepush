@@ -79,8 +79,9 @@ var TokesApp = (function () {
     // The way this works is: 
     var ul = createElementAt(friendsContainer, "ul", "ul-friend-list");
     for (var i in myFriends) {
-      var canToke = myFriends[i].remoteEndpoint?". Send Toke!":"";
-      var li = createElementAt(ul, "li", "li-nick-"+myFriends[i].nick, myFriends[i].nick + canToke );
+      var canToke = myFriends[i].remoteEndpoint ? ". Send Toke!" : "";
+      var isMyFriend = myFriends[i].endpoint ? "" : "Not my friend! ";
+      var li = createElementAt(ul, "li", "li-nick-"+myFriends[i].nick, isMyFriend + myFriends[i].nick + canToke );
       if (myFriends[i].remoteEndpoint) {
         li.onclick = function() {
           debugTokes && debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
