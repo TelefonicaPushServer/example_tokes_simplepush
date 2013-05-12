@@ -54,9 +54,9 @@ var TokesServer = (function() {
 
   return {
     sendEndpointToServer: sendEndpointToServer,
-    notifyTopic: notifyTopic,
+    saveFriendsToRemote: saveFriendsToRemote,
+    loadMyRemoteFriends: loadMyRemoteFriends,
     isConfigured: isConfigured
-
   }
 
 })();
