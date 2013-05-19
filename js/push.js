@@ -13,9 +13,7 @@ var Push = (function() {
     return pushEnabled;
   }
 
-  function debug(msg) {
-    dump('[DEBUG] tsimplepush. Push: ' + msg + '\n');
-  }
+  var debug = debugPush?Utils.debug.bind(undefined,"tsimplepush:Push"):function () { };
 
   // aCallback: Must receive a string parameter on which the new endpoint will be passed
   // simulate: specify if we should return a fake endpoint if there's no support or just fail
@@ -26,7 +24,7 @@ var Push = (function() {
       
       req.onsuccess = function(e) {
           var endpoint = req.result;
-          debugPush && debug("New endpoint: " + endpoint );
+          debug("New endpoint: " + endpoint );
           aCallback(endpoint);
       };
 
@@ -36,7 +34,7 @@ var Push = (function() {
         
     } else {
       // No push on the DOM, just simulate it and be done...
-      debugPush && debug ("Push is not enabled!!!");
+      debug ("Push is not enabled!!!");
       aCallback(simulate ? "http://anurl.with.com/" + Math.floor(Math.random() * 10000) : undefined);
     }
   }
@@ -44,21 +42,10 @@ var Push = (function() {
   function sendPushTo(aEndpoint) {
     // We can do this even if the platform doesn't support push. We cannot receive
     // but we can still send notifications...
-    var xhr = new XMLHttpRequest();
-    xhr.open("PUT",aEndpoint);
-    xhr.overrideMimeType("application/json");
-    xhr.onload = function () {
-      // We won't really do anything here...
-      debugPush && console.log("Push successfully sent to " + aEndpoint);
-    }
-    xhr.onerror = function (e) {
-      // And we should probably process this...
-      debugPush && debug("Got an error while sending a push notification to " + aEndpoint + ": " + 
-                          JSON.stringify(e));
-    }
-    debugPush && debug("Sending Toke to " + aEndpoint);
-
-    xhr.send("version=" + new Date().getTime());
+    Utils.sendXHR('PUT', aEndPoint, "version=" + new Date().getTime(), 
+                  function (e) { debug("Push successfully sent to " + aEndpoint);},
+                  function (e) { debug("Got an error while sending a push notification to " + aEndpoint + ": " + 
+                                       JSON.stringify(e));});
   }
 
   function setPushHandler(aHandler) {

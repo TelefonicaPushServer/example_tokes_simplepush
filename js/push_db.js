@@ -14,30 +14,26 @@ var PushDb = (function () {
 
   var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
   var database = null;
-
-  function debug(msg) {
-//    dump('[DEBUG] tsimplepush: ' + msg + '\n');
-    console.log('[DEBUG] tsimplepush.PushDb: ' + msg + '\n');
-  };
+                
+  var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
 
   function init(db_name, version) {
 
     var dbHandle = indexedDB.open(db_name, version);
     dbHandle.onsuccess = function (event) {
-      debugPushDb && debug("IDB.open.onsuccess called");
+      debug("IDB.open.onsuccess called");
       database = dbHandle.result;
     };
 
     dbHandle.onerror = function(event) {
-      debugPushDb && 
-        debug("Ups! Cannot create or access the database! Error: " + event.target.error);
+      debug("Ups! Cannot create or access the database! Error: " + event.target.error);
     };
 
     dbHandle.onupgradeneeded = function (event) {
       // For this version I will create just one of object store to keep track of 
       // the different pushendpoints I've registered
       // Oh and I'm happily assuming that the operation is always a create.
-      debugPushDb && debug("IDB.open.onupgrade called");
+      debug("IDB.open.onupgrade called");
       try {
         dbHandle.result.createObjectStore(DB_TNAME, {keyPath: "endpoint"});
       } catch (x) {
@@ -58,7 +54,7 @@ var PushDb = (function () {
     };
 
     getRequest.onerror = function () {
-      debugPushDb && debug("getNickForEP: get.onerror called" + getRequest.error.name);
+      debug("getNickForEP: get.onerror called" + getRequest.error.name);
     };
   };
 
@@ -80,7 +76,7 @@ var PushDb = (function () {
     var store = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME);
     var readAllReq = store.openCursor();
     readAllReq.onsuccess = function () {
-      debugPushDb && debug ("getRegisteredNicks: readAllReq.onsuccess called");
+      debug ("getRegisteredNicks: readAllReq.onsuccess called");
       var cursor = readAllReq.result;
       if (!cursor) {
         aCallback(returnedValue);
