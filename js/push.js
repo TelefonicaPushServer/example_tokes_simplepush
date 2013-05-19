@@ -13,7 +13,7 @@ var Push = (function() {
     return pushEnabled;
   }
 
-  function debug() = debugPush?Utils.debug.bind(undefined,"tsimplepush:Push"):function () { };
+  var debug = debugPush?Utils.debug.bind(undefined,"tsimplepush:Push"):function () { };
 
   // aCallback: Must receive a string parameter on which the new endpoint will be passed
   // simulate: specify if we should return a fake endpoint if there's no support or just fail

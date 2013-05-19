@@ -3,28 +3,31 @@
 var Utils = (function() {
   'use strict';
 
-  function debug (topic, msg) {
-    console.log('[DEBUG] '+ new Date.toString() + " - " + topic + ': ' + msg + '\n');
+  function genericDebug (topic, msg) {
+    console.log('[DEBUG] '+ new Date().toString() + " - " + topic + ': ' + msg + '\n');
   }
 
+  var debugUtils = true;
+  var debug = debugUtils ? genericDebug.bind(undefined, "tsimplepush:Utils"): function () {};
+
   // Doing it generic isn't worth the problem... this expects to get a JSON and will bork otherwise
-  function sendXHR(aType, aURL, aData, aSuccessCallback, aFailureCallback) {
+  function sendXHR(aType, aURL, aData, aSuccessCallback, aFailureCallback, aDataType) {
       var xhr = new XMLHttpRequest();
       xhr.open(aType, aURL);
       xhr.responseType = "json";
       xhr.overrideMimeType("application/json");
-      if (aData) {
-        xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+      if (aDataType) {
+        xhr.setRequestHeader("Content-Type", aDataType);
         xhr.setRequestHeader("Content-Length", aData.length);
       }
       xhr.onload = function (evt) {
-        debugUtils && debug("sendXHR. XHR success");
+        debug("sendXHR. XHR success");
         // Error control is for other people... :P
         if (aSuccessCallback)
           aSuccessCallback(xhr.response);
       }
       xhr.onerror = function (evt){
-        debugUtils && debug("sendXHR. XHR failed " + JSON.stringify(evt) + "url: "+ aURL + " Data: " + aData + "RC: " + xhr.responseCode);
+        debug("sendXHR. XHR failed " + JSON.stringify(evt) + "url: "+ aURL + " Data: " + aData + " RC: " + xhr.responseCode);
         if (aFailureCallback)
           aFailureCallback(evt);
       }
@@ -62,7 +65,7 @@ var Utils = (function() {
 
   return {
     sendXHR: sendXHR,
-    debug: debug,
+    debug: genericDebug,
     addText: addText,
     createElementAt: createElementAt
   }

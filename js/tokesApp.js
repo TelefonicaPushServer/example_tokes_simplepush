@@ -50,7 +50,7 @@ var TokesApp = (function () {
       var li = Utils.createElementAt(ul, "li", "li-nick-"+myFriends[i].nick, isMyFriend + myFriends[i].nick + canToke );
       if (myFriends[i].remoteEndpoint) {
         li.onclick = function() {
-          debugTokes && debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
+          debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
           Push.sendPushTo(arguments[0]);
         }.bind(undefined, myFriends[i].remoteEndpoint, myFriends[i].nick);
       }
@@ -61,7 +61,7 @@ var TokesApp = (function () {
     var ul=document.getElementById("ul-friend-list") || Utils.createElementAt(friendsContainer, "ul", "ul-friend-list");
     var li = document.getElementById("li-nick-" + aNick) || Utils.createElementAt(ul, "li", "li-nick-" + aNick, aNick);
     PushDb.setNickForEP(aEndpoint, aNick);
-    Server.sendEndpointToServer(aNick, aEndpoint);
+    Server.sendEndpointToServer(selfNick, aNick, aEndpoint);
     var added = false;
     for (var i in myFriends) {
       if (myFriends[i].nick === aNick) {
@@ -115,7 +115,7 @@ var TokesApp = (function () {
   function onLoginClick(evt) {
     if (evt && evt.preventDefault)
       evt.preventDefault();
-    debugTokes && debug("onLoginClick called");
+    debug("onLoginClick called");
     if (selfNickField.value !== selfNick) {
       selfNick = selfNickField.value;
       PushDb.setSelfNick(selfNick);
@@ -124,17 +124,17 @@ var TokesApp = (function () {
     mainWrapper.style.display = '';
     PushDb.getRegisteredNicks(function (internalFriends) {
       myFriends = internalFriends;
-      Server.saveFriendsToRemote(myFriends);
-      Server.loadMyRemoteFriends(mixfriends, updateFriendList);
+      Server.saveFriendsToRemote(selfNick, myFriends);
+      Server.loadMyRemoteFriends(selfNick, mixFriends, updateFriendList);
     });
     
   }
 
 
   function setSelfNick(aNick) {
-    debugTokes && debug("setSelfNick called with: " + JSON.stringify(aNick));
+    debug("setSelfNick called with: " + JSON.stringify(aNick));
     if (aNick && aNick.nick) {
-      debugTokes && debug("setting selfNick to " + aNick.nick);
+      debug("setting selfNick to " + aNick.nick);
       selfNick = aNick.nick;
     } else {
       selfNick = "";
@@ -152,7 +152,7 @@ var TokesApp = (function () {
 
     if (isAlreadyAFriend(aNick)) {
       // Should probably inform the user... naaaah
-      debugTokes && debug("Nasty user! Trying to add an existing friend " + aNick + " no cookie!");
+      debug("Nasty user! Trying to add an existing friend " + aNick + " no cookie!");
     } else {
         Push.getNewEndpoint(true, addFriendEP.bind(undefined, aNick));
     }
@@ -164,7 +164,7 @@ var TokesApp = (function () {
   }
 
   function init() {
-    debugTokes && debug("init called");
+    debug("init called");
 
     selfNickField = document.getElementById("self-nick");
     loginButton = document.getElementById("login-button");
@@ -198,7 +198,7 @@ var TokesApp = (function () {
 
         notification.onclick = function test_notificationClick() {
           // To-do: we should bring ourselves to foreground, maybe
-          debugTokes && debug("notification clicked!");
+          debug("notification clicked!");
           // Bring app to foreground
           /*
           navigator.mozApps.getSelf().onsuccess = function getSelfCB(evt) {
@@ -210,7 +210,7 @@ var TokesApp = (function () {
       
         notification.show();
       } else {
-        debugTokes && debug("Got an unexpected notification!");
+        debug("Got an unexpected notification!");
       }
     });
   }

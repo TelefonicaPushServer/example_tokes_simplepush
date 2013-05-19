@@ -14,18 +14,18 @@ var TokesServer = (function() {
     return (server != null && server != undefined && server != "");
   }
 
-  function sendEndpointToServer(aNick, aEndpoint) {
-    // should URLize selfNick, aNick and aEndPoint... definitely aEndpoint
+  function sendEndpointToServer(aSelfNick, aNick, aEndpoint) {
+    // should URLize aSelfNick, aNick and aEndPoint... definitely aEndpoint
     var dataToSend = 'endpoint=' + aEndpoint;
-    debugTokes && debug ("Sending " + dataToSend + "to " + server + " (or I will someday anyway) ");
+    debug ("Sending " + dataToSend + "to " + server + " (or I will someday anyway) ");
     if (server)
-      Utils.sendXHR("PUT", server + "/friend/" + encodeURIComponent(aNick) + "/" + encodeURIComponent(selfNick), dataToSend);
+      Utils.sendXHR("PUT", server + "/friend/" + encodeURIComponent(aNick) + "/" + encodeURIComponent(aSelfNick), dataToSend);
   }
 
-  function loadMyRemoteFriends(aSuccessCallback, aFailureCallback) {
+  function loadMyRemoteFriends(aSelfNick, aSuccessCallback, aFailureCallback) {
     // To-Do: This should load the data remotely... if the server is configured and up
     if (isConfigured()) { // Server side not done yet
-      Utils.sendXHR("GET", server + "/friend/" + encodeURIComponent(selfNick), null, aSuccessCallback, aFailureCallback);
+      Utils.sendXHR("GET", server + "/friend/" + encodeURIComponent(aSelfNick), null, aSuccessCallback, aFailureCallback);
     } else {
         // Simulation FTW!
       var myRemoteFriends = [
@@ -46,9 +46,9 @@ var TokesServer = (function() {
     }
   }
 
-  function saveFriendsToRemote(aFriendList) {
+  function saveFriendsToRemote(aSelfNick, aFriendList) {
     for (var i in aFriendList) {
-      sendEndpointToServer(aFriendList[i].nick, aFriendList[i].endpoint);
+      sendEndpointToServer(aSelfNick, aFriendList[i].nick, aFriendList[i].endpoint);
     }
   }
 
