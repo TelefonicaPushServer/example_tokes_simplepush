@@ -6,18 +6,19 @@ var STORE_NAME = 'push_app_store';
 var Push = (function() {
 
   var debugPush = true;
+  var debug = debugPush?Utils.debug.bind(undefined,"tsimplepush:Push"):function () { };
 
   var pushEnabled = navigator.push && navigator.push.register;
+  var pushUnregEnabled = navigator.push && navigator.push.unregister;
 
   function isPushEnabled() {
     return pushEnabled;
   }
 
-  var debug = debugPush?Utils.debug.bind(undefined,"tsimplepush:Push"):function () { };
-
   // aCallback: Must receive a string parameter on which the new endpoint will be passed
   // simulate: specify if we should return a fake endpoint if there's no support or just fail
   function getNewEndpoint(simulate, aCallback) {
+
     if (pushEnabled) {
       var self = this;
       var req = navigator.push.register();
@@ -30,8 +31,7 @@ var Push = (function() {
 
       req.onerror = function(e) {
         debug("Error getting a new endpoint: " + JSON.stringify(e));
-      }
-        
+      }        
     } else {
       // No push on the DOM, just simulate it and be done...
       debug ("Push is not enabled!!!");
@@ -39,7 +39,29 @@ var Push = (function() {
     }
   }
 
+  function deleteEndpoint(ep, callback) {
+ 
+    debug("deleteEndpoint: " + ep);
+    if (pushUnregEnabled) {
+      var self = this;
+      var req = navigator.push.unregister(ep);
+
+      req.onsuccess = function(e) {
+        debug("EP " + ep + " unregister");
+          callback();
+      };
+
+      req.onerror = function(e){
+        debug("Error unregister endpoint: " + JSON.stringify(e));
+      }
+    } else {
+      debug("Unregister Push is not enabled!!!");
+      callback(undefined);
+    }    
+  }
+
   function sendPushTo(aEndpoint) {
+
     // We can do this even if the platform doesn't support push. We cannot receive
     // but we can still send notifications...
     Utils.sendXHR('PUT', aEndPoint, "version=" + new Date().getTime(), 
@@ -49,18 +71,17 @@ var Push = (function() {
   }
 
   function setPushHandler(aHandler) {
+
     if (pushEnabled && window.navigator.mozSetMessageHandler) {
       window.navigator.mozSetMessageHandler('push', aHandler);
     } // Else?...
   }
     
-
   return {
     sendPushTo: sendPushTo,
     isPushEnabled: isPushEnabled,
     getNewEndpoint: getNewEndpoint,
-    setPushHandler: setPushHandler
-    
+    setPushHandler: setPushHandler,
+    deleteEndpoint: deleteEndpoint
   }
-
 })();

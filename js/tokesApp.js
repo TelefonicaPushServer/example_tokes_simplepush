@@ -1,65 +1,86 @@
 // The main flow of the app goes here...
 
-'use strict';
-
 var TokesApp = (function () {
-  var debugTokes = true;
+
+  'use strict';
+
+  var debugTokes = true,
+      debug = debugTokes?Utils.debug.bind(undefined, "tsimplepush:TokesApp"):function (msg) {};
 
   // This can/have to be changed to allow different kind of servers easily
   var Server = TokesServer;
 
-  var debug = debugTokes?Utils.debug.bind(undefined, "tsimplepush:TokesApp"):function (msg) {};
-  var self = this;
-  var selfNick = "";
+  var self = this,
+      selfNick = "";
 
   // Form elements and the rest...
+  var selfNickField = null,
+      loginButton = null,
+      mainWrapper = null,
+      selfNickWrapper = null,
+      addFriendButton = null,
+      friendsContainer = null,
+      friendNickField = null;
 
-  var selfNickField = null;
-  var loginButton = null;
-  var mainWrapper = null;
-  var selfNickWrapper = null;
-  var addFriendButton = null;
-  var friendsContainer = null;
-  var friendNickField = null;
+  var IMG_IN = "style/icons/in.jpg",
+      IMG_OUT = "style/icons/out.jpg",
+      IMG_INOUT = "style/icons/inout.jpg";
 
   var myFriends = [];
 
   // Return false also if the friend exist but isn't registered (so we can talk to him but not the reverse)
   // And yeah, I know, for some value of 'talk'
   function isAlreadyAFriend(aNick) {
+
     for (var i in myFriends) {
-      if ((myFriends[i].nick === aNick) && (myFriends[i].endpoint))
+      if ((myFriends[i].nick === aNick) && (myFriends[i].endpoint)) {
         return true;
+      }
     }
     return false;
   }
-
-  // What I'll have on the HTML:
-  // <ul id='all-friends-lists' class="whatever">
-  //   <li id='friend-id-' + nick onclick="clickOnFriend(ep);"> Nick </li>
-  // </ul>
+  
+  /**
+   * What I'll have on the HTML:
+   * <ul id='all-friends-lists' class="whatever">
+   *   <li id='friend-id-' + nick onclick="clickOnFriend(ep);"> Nick </li>
+   * </ul>
+   */
   function updateFriendList() {
+
     // I could prolly do this on a nicer way, but this works also...
     friendsContainer.innerHtml = '';
     
     // The way this works is: 
-    var ul = Utils.createElementAt(friendsContainer, "ul", "ul-friend-list");
+    var ul = Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
     for (var i in myFriends) {
-      var canToke = myFriends[i].remoteEndpoint ? ". Send Toke!" : "";
-      var isMyFriend = myFriends[i].endpoint ? "" : "Not my friend! ";
-      var li = Utils.createElementAt(ul, "li", "li-nick-"+myFriends[i].nick, isMyFriend + myFriends[i].nick + canToke );
+      var canToke = myFriends[i].remoteEndpoint !== undefined;
+      var isMyFriend = myFriends[i].endpoint !== undefined;
+      var li = Utils.createElementAt(ul, "li", {id: "li-nick-" + myFriends[i].nick}, myFriends[i].nick);
+      var img = Utils.createElementAt(li,"img", {id: "img-nick-" + myFriends[i].nick, 
+                                                 width: "18px", height:"10px",
+                                                 class: "imgPush"});
+      img.src = (canToke && isMyFriend ? IMG_INOUT : canToke? IMG_OUT: IMG_IN);
+                              
       if (myFriends[i].remoteEndpoint) {
+        //Cambiar --> anyadir onClick al nombre o a acualquier sitio, no al li
         li.onclick = function() {
           debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
           Push.sendPushTo(arguments[0]);
         }.bind(undefined, myFriends[i].remoteEndpoint, myFriends[i].nick);
       }
+
+      if (isMyFriend){
+         //CJC
+         //Anyadir boton X
+      }
     }
   }
 
   function addFriendEP(aNick, aEndpoint) {
-    var ul=document.getElementById("ul-friend-list") || Utils.createElementAt(friendsContainer, "ul", "ul-friend-list");
-    var li = document.getElementById("li-nick-" + aNick) || Utils.createElementAt(ul, "li", "li-nick-" + aNick, aNick);
+
+    var ul = document.getElementById("ul-friend-list") || Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
+    var li = document.getElementById("li-nick-" + aNick) || Utils.createElementAt(ul, "li", {id: "li-nick-" + aNick}, aNick);
     PushDb.setNickForEP(aEndpoint, aNick);
     Server.sendEndpointToServer(selfNick, aNick, aEndpoint);
     var added = false;
@@ -76,11 +97,11 @@ var TokesApp = (function () {
           endpoint: aEndpoint,
           remoteEndpoint: undefined
       });
-    }
-    
+    }    
   }
 
   function mixFriends(myRemoteFriends) {
+
     for (var i in myRemoteFriends) {
       for(var j in myFriends) {
         if (myFriends[j].nick === myRemoteFriends[i].nick) {
@@ -104,17 +125,16 @@ var TokesApp = (function () {
           endpoint: undefined
         });
       }
-    }
-    
-    updateFriendList();
-    
+    }    
+    updateFriendList();    
   }
-
 
   // Self explanatory :P
   function onLoginClick(evt) {
-    if (evt && evt.preventDefault)
+
+    if (evt && evt.preventDefault) {
       evt.preventDefault();
+    }
     debug("onLoginClick called");
     if (selfNickField.value !== selfNick) {
       selfNick = selfNickField.value;
@@ -126,10 +146,8 @@ var TokesApp = (function () {
       myFriends = internalFriends;
       Server.saveFriendsToRemote(selfNick, myFriends);
       Server.loadMyRemoteFriends(selfNick, mixFriends, updateFriendList);
-    });
-    
+    });    
   }
-
 
   function setSelfNick(aNick) {
     debug("setSelfNick called with: " + JSON.stringify(aNick));
@@ -142,9 +160,21 @@ var TokesApp = (function () {
     selfNickField.value = selfNick;
   }
 
-  function onAddFriendClick(evt) {
-    if (evt && evt.preventDefault)
+  function onRemoveFriendClick(evt) {
+
+    if (evt && evt.preventDefault) {
       evt.preventDefault();
+    }
+   
+    var aNick = friendNickField.value;
+      Push.removeEndpoint(
+  }
+
+  function onAddFriendClick(evt) {
+
+    if (evt && evt.preventDefault) {
+      evt.preventDefault();
+    }
     var aNick = friendNickField.value;
     // If this fails this isn't going to be funny
     friendNickField.value = ""; 
@@ -156,14 +186,15 @@ var TokesApp = (function () {
     } else {
         Push.getNewEndpoint(true, addFriendEP.bind(undefined, aNick));
     }
-
   }
 
   function onFriendNickChange() {
+
     addFriendButton.disabled = friendNickField.value === "";
   }
 
   function init() {
+
     debug("init called");
 
     selfNickField = document.getElementById("self-nick");
@@ -175,7 +206,6 @@ var TokesApp = (function () {
     selfNickWrapper = document.getElementById("self-nick-wrapper");
     friendNickField = document.getElementById("friend-to-add");
 
-
     // Event Listeners
     document.getElementById("login-form").addEventListener('submit',onLoginClick);
     document.getElementById("add-friend-form").addEventListener('submit',onAddFriendClick);
@@ -186,15 +216,15 @@ var TokesApp = (function () {
     Push.setPushHandler(function (e) {
       processNotification(e.pushEndpoint);
     });
-
   }
 
   function processNotification(aEndpoint) {
+
     // This should work on an uninitialized app...
     PushDb.getNickForEP(aEndpoint,function (aValue) {
-      if (aValue && aValue.nick) {
-        
-        var notification = window.navigator.mozNotification.createNotification('Tokes App', 'Got a Toke from ' + aValue.nick);
+      if (aValue && aValue.nick) {        
+        var notification = window.navigator.mozNotification.createNotification('Tokes App', 
+                               'Got a Toke from ' + aValue.nick);
 
         notification.onclick = function test_notificationClick() {
           // To-do: we should bring ourselves to foreground, maybe
@@ -206,8 +236,7 @@ var TokesApp = (function () {
             app.launch('push');
           };
            */
-        };
-      
+        };      
         notification.show();
       } else {
         debug("Got an unexpected notification!");
@@ -225,8 +254,8 @@ var TokesApp = (function () {
 })();
 
 window.addEventListener('load', function showBody() {
+
   console.log("loadHandler called");
   TokesApp.init();
   PushDb.getSelfNick(TokesApp.setSelfNick);
-
 });
