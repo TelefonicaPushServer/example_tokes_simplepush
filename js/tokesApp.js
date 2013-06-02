@@ -4,34 +4,35 @@ var TokesApp = (function () {
 
   'use strict';
 
-  var debugTokes = true,
-      debug = debugTokes?Utils.debug.bind(undefined, "tsimplepush:TokesApp"):function (msg) {};
+  var debugTokes = true;
+
+  var debug = debugTokes?Utils.debug.bind(undefined, "tsimplepush:TokesApp"):function (msg) {};
 
   // This can/have to be changed to allow different kind of servers easily
   var Server = TokesServer;
 
-  var self = this,
-      selfNick = "";
+  var self = this;
+    
+  var selfNick = "";
 
   // Form elements and the rest...
-  var selfNickField = null,
-      loginButton = null,
-      mainWrapper = null,
-      selfNickWrapper = null,
-      addFriendButton = null,
-      friendsContainer = null,
-      friendNickField = null;
+  var selfNickField = null;
+  var loginButton = null;
+  var mainWrapper = null;
+  var selfNickWrapper = null;
+  var addFriendButton = null;
+  var friendsContainer = null;
+  var friendNickField = null;
 
-  var IMG_IN = "style/icons/in.jpg",
-      IMG_OUT = "style/icons/out.jpg",
-      IMG_INOUT = "style/icons/inout.jpg";
+//  var IMG_SEND = "style/icons/send@2x.png";
+  var IMG_SEND = "style/icons/out.jpg";
+  var IMG_ERASE = "style/icons/clear.png";
 
   var myFriends = [];
 
   // Return false also if the friend exist but isn't registered (so we can talk to him but not the reverse)
   // And yeah, I know, for some value of 'talk'
   function isAlreadyAFriend(aNick) {
-
     for (var i in myFriends) {
       if ((myFriends[i].nick === aNick) && (myFriends[i].endpoint)) {
         return true;
@@ -39,83 +40,148 @@ var TokesApp = (function () {
     }
     return false;
   }
+
+  /** 
+   *  What should the LI have? something like
+   *  <aside class="pack-end"> <!-- only if it's a local friend -->
+   *    <img alt="placeholder" src="erase.jpg" onclick="eraseFriend">
+   *  </aside>
+   *  <aside class="icon"> 
+   *    <img src="typeoffriend.jpg">
+   *  </aside>
+   *  <p onclick="sendToke"> Friend Nick </p>
+   * 
+   */
+
+  function createLIContent(aUl, aFriend) {
+    var li = Utils.createElementAt(aUl, "li", {id: "li-nick-" + aFriend.nick});
+
+    // Add the send button...
+    var sendToke = undefined;
+    if (aFriend.remoteEndpoint) {
+      var asideTOF = Utils.createElementAt(li, "aside", 
+        { 
+          id: "aside-tof-nick-" + aFriend.nick
+        }
+      );
+      var imgTOF = Utils.createElementAt(asideTOF, "img", 
+        {
+          id: "img-nick-" + aFriend.nick, 
+          src: IMG_SEND
+        }
+      );
+      sendToke = function() {
+        debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
+        Push.sendPushTo(arguments[0]);
+      }.bind(undefined, aFriend.remoteEndpoint, aFriend.nick);
+      asideTOF.onclick = sendToke; 
+    }
+
+    // Add the erase button
+    if (aFriend.endpoint){
+      var asideErase = Utils.createElementAt(li, "aside", 
+          {
+            id: "aside-erase-nick-" + aFriend.nick, 
+            "class": "pack-end"
+          }
+      );
+      var imgErase = Utils.createElementAt(asideErase, "img", 
+        { 
+          id: "img-nick-" + aFriend.nick, 
+          src: IMG_ERASE
+        }
+      );
+      asideErase.onclick = function () {
+        // TO-DO TO-DO. LEFT IT HERE. ERASE THE FRIEND!!!
+        eraseLocalFriend(arguments[0]);
+        
+      }.bind(undefined, aFriend.nick);
+    }
+    // And finally the name
+    var nameHolder = Utils.createElementAt(li, "p",
+                                           { id: "txt-nick-" + aFriend.nick },
+                                           aFriend.nick);
+    if (sendToke) {
+      nameHolder.onclick = sendToke;
+    }
+
+    return li;
+  }
+
+  function getFriendFromList(aNick) {
+    for (var i in myFriends) {
+      if (myFriends[i].nick === aNick) {
+        return i;
+      }
+    }
+    return undefined;
+  }
+
+  // This should: 
+  // 1. Erase the remote endpoint
+  // 2. Unregister the endpoint
+  // 3. Erase the endpoint from the local friend (and from the database)
+  // On this version, we're going to happily assume no failures...
+  function eraseLocalFriend(aNick) {
+    var i = getFriendFromList(aNick);
+    function eraseFromDb(aUnregisterSuccess) {
+      // Ignoring aUnregisterSuccess for the time being
+      PushDb.eraseEP(myFriends[i].endpoint, function () {
+        delete myFriends[i];
+        updateFriendList(); // Programmer efficiency FTW :P
+      });
+    }
+    if (i !== undefined) {
+      Server.eraseEndpoint(selfNick, myFriends[i].nick, myFriends[i].endpoint,
+                                     Push.deleteEndpoint.bind(undefined, myFriends[i].endpoint, eraseFromDb));
+    }
+  }
+
   
   /**
    * What I'll have on the HTML:
    * <ul id='all-friends-lists' class="whatever">
-   *   <li id='friend-id-' + nick onclick="clickOnFriend(ep);"> Nick </li>
+   *   <li id='friend-id-' + nick onclick="clickOnFriend(ep);"> LI-CONTENT </li>
    * </ul>
    */
   function updateFriendList() {
-
     // I could prolly do this on a nicer way, but this works also...
-    friendsContainer.innerHtml = '';
+    friendsContainer.innerHTML = '';
     
     // The way this works is: 
     var ul = Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
     for (var i in myFriends) {
-      var canToke = myFriends[i].remoteEndpoint !== undefined;
-      var isMyFriend = myFriends[i].endpoint !== undefined;
-      var li = Utils.createElementAt(ul, "li", {id: "li-nick-" + myFriends[i].nick}, myFriends[i].nick);
-      var img = Utils.createElementAt(li,"img", {id: "img-nick-" + myFriends[i].nick, 
-                                                 width: "18px", height:"10px",
-                                                 class: "imgPush"});
-      img.src = (canToke && isMyFriend ? IMG_INOUT : canToke? IMG_OUT: IMG_IN);
-                              
-      if (myFriends[i].remoteEndpoint) {
-        //Cambiar --> anyadir onClick al nombre o a acualquier sitio, no al li
-        li.onclick = function() {
-          debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
-          Push.sendPushTo(arguments[0]);
-        }.bind(undefined, myFriends[i].remoteEndpoint, myFriends[i].nick);
-      }
-
-      if (isMyFriend){
-         //CJC
-         //Anyadir boton X
-      }
+      createLIContent(ul, myFriends[i]);
     }
   }
 
   function addFriendEP(aNick, aEndpoint) {
-
     var ul = document.getElementById("ul-friend-list") || Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
-    var li = document.getElementById("li-nick-" + aNick) || Utils.createElementAt(ul, "li", {id: "li-nick-" + aNick}, aNick);
     PushDb.setNickForEP(aEndpoint, aNick);
-    Server.sendEndpointToServer(selfNick, aNick, aEndpoint);
-    var added = false;
-    for (var i in myFriends) {
-      if (myFriends[i].nick === aNick) {
-        myFriends[i].endpoint = aEndpoint;
-        added = true; 
-        break;
-      }
-    }
-    if (!added) {
-      myFriends.push({
+    Server.sendEndpoint(selfNick, aNick, aEndpoint);
+    var i = getFriendFromList(aNick);
+    if (i !== undefined) {
+      myFriends[i].endpoint = aEndpoint;
+    } else {
+      var newFriend = {
           nick: aNick,
           endpoint: aEndpoint,
           remoteEndpoint: undefined
-      });
+      }; 
+      myFriends.push(newFriend);
+      createLIContent(ul, newFriend);
     }    
   }
 
   function mixFriends(myRemoteFriends) {
-
     for (var i in myRemoteFriends) {
-      for(var j in myFriends) {
-        if (myFriends[j].nick === myRemoteFriends[i].nick) {
-          if (myFriends[j].remoteEndpoint != myRemoteFriends[i].endpoint) {
-            myFriends[j].remoteEndpoint = myRemoteFriends[i].endpoint;
-            PushDb.setNickForEP(myFriends[j].endpoint, myFriends[j].nick, myFriends[j].remoteEndpoint);
-          }
-          myRemoteFriends[i].alreadyAdded = true;
-          break; // We found it, no need to continue
+      var j = getFriendFromList(myRemoteFriends[i].nick);
+      if (j !== undefined) {
+        if (myFriends[j].remoteEndpoint != myRemoteFriends[i].endpoint) {
+          myFriends[j].remoteEndpoint = myRemoteFriends[i].endpoint;
+          PushDb.setNickForEP(myFriends[j].endpoint, myFriends[j].nick, myFriends[j].remoteEndpoint);
         }
-      }
-    }
-    for (var i in myRemoteFriends) {
-      if (!myRemoteFriends[i].alreadyAdded) {
+      } else {
         // Should I add it without a local endpoint? I could but not with the DB as currently defined
         // So tough luck...
         // I could use a trick here but let's leave that for V2. Or for the reader. Whatever.
@@ -131,7 +197,6 @@ var TokesApp = (function () {
 
   // Self explanatory :P
   function onLoginClick(evt) {
-
     if (evt && evt.preventDefault) {
       evt.preventDefault();
     }
@@ -161,17 +226,16 @@ var TokesApp = (function () {
   }
 
   function onRemoveFriendClick(evt) {
-
     if (evt && evt.preventDefault) {
       evt.preventDefault();
     }
    
     var aNick = friendNickField.value;
-      Push.removeEndpoint(
+    // TO-DO
+   // Push.removeEndpoint(
   }
 
   function onAddFriendClick(evt) {
-
     if (evt && evt.preventDefault) {
       evt.preventDefault();
     }
@@ -189,12 +253,10 @@ var TokesApp = (function () {
   }
 
   function onFriendNickChange() {
-
     addFriendButton.disabled = friendNickField.value === "";
   }
 
   function init() {
-
     debug("init called");
 
     selfNickField = document.getElementById("self-nick");
@@ -213,13 +275,13 @@ var TokesApp = (function () {
     friendNickField.addEventListener('input', onFriendNickChange);
 
     // Register the push handler
-    Push.setPushHandler(function (e) {
+    // TO-DO TO-DO TO-DO: Add the push-register handler here!!!
+    Push.setPushHandlers(function (e) {
       processNotification(e.pushEndpoint);
     });
   }
 
   function processNotification(aEndpoint) {
-
     // This should work on an uninitialized app...
     PushDb.getNickForEP(aEndpoint,function (aValue) {
       if (aValue && aValue.nick) {        
@@ -254,7 +316,6 @@ var TokesApp = (function () {
 })();
 
 window.addEventListener('load', function showBody() {
-
   console.log("loadHandler called");
   TokesApp.init();
   PushDb.getSelfNick(TokesApp.setSelfNick);

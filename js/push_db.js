@@ -4,20 +4,20 @@ var PushDb = (function () {
 
   'use strict';
 
-  var DB_NAME = 'tsimplepush_db_test',
-      DB_VERSION = 1.0,
-      DB_TNAME = 'pushEndpoints';
+  var DB_NAME = 'tsimplepush_db_test';
+  var DB_VERSION = 1.0;
+  var DB_TNAME = 'pushEndpoints';
                 
   var SELF_EP = 'ep_self';
 
-  var debugPushDb = true,
-      debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
+  var debugPushDb = true;
+  
+  var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
 
   var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
   var database = null;               
 
   function init(db_name, version) {
-
     var dbHandle = indexedDB.open(db_name, version);
 
     dbHandle.onsuccess = function (event) {
@@ -46,7 +46,6 @@ var PushDb = (function () {
   // pushTable should have a valid IDBDatabase for these methods to work...
   // otherwise they'll happily fail.
   function getNickForEP(aEndpoint, aCallback) {
-
     var getRequest = database.transaction(DB_TNAME,'readonly').objectStore(DB_TNAME).get(aEndpoint);
 
     getRequest.onsuccess = function () {
@@ -58,14 +57,29 @@ var PushDb = (function () {
     };
   };
 
+  function eraseEP(aEndpoint, aCallback) {
+    var eraseRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).delete(aEndpoint);
+
+    eraseRequest.onsuccess = function () {
+      aCallback(eraseRequest.result);
+    };
+
+    eraseRequest.onerror = function () {
+      debug("eraseEP: delete.onerror called" + eraseRequest.error.name);
+    };
+    
+  }
+
   // Exercise for the reader: I should probably store the remote endpoints also at some point
   // If only so I can safely kill the server once the system is setup
   function setNickForEP(aEndpoint, aNick, aRemoteEndpoint, aCallback) {
-
-    var putRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).put({
-                        endpoint: aEndpoint, 
-                        nick: aNick, 
-                        remoteEndpoint: aRemoteEndpoint });
+    var putRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).put(
+      {
+        endpoint: aEndpoint, 
+        nick: aNick, 
+        remoteEndpoint: aRemoteEndpoint 
+      }
+    );
     if (aCallback) {
       putRequest.onsuccess = function () {
         aCallback();
@@ -74,7 +88,6 @@ var PushDb = (function () {
   };
 
   function getRegisteredNicks(aCallback) {
-
     var returnedValue = [];
     var store = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME);
     var readAllReq = store.openCursor();
@@ -97,7 +110,6 @@ var PushDb = (function () {
   };
 
   function clearDB() {
-
     var store = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME);
     store.clear();
   }
@@ -107,6 +119,7 @@ var PushDb = (function () {
   return {
     getNickForEP: getNickForEP,
     setNickForEP: setNickForEP,
+    eraseEP: eraseEP,
     getSelfNick: getNickForEP.bind(undefined,SELF_EP),
     setSelfNick: setNickForEP.bind(undefined,SELF_EP),
     getRegisteredNicks: getRegisteredNicks,

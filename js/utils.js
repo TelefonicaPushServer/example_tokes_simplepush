@@ -2,70 +2,73 @@
 var Utils = (function() {
 
   'use strict';
+
   var debugUtils = true;
   var debug = debugUtils ? genericDebug.bind(undefined, "tsimplepush:Utils"): function () {};
 
   function genericDebug (topic, msg) {
-
     console.log('[DEBUG] '+ new Date().toString() + " - " + topic + ': ' + msg + '\n');
   }
 
   // Doing it generic isn't worth the problem... this expects to get a JSON and will bork otherwise
   function sendXHR(aType, aURL, aData, aSuccessCallback, aFailureCallback, aDataType) {
-
     var xhr = new XMLHttpRequest();
     xhr.open(aType, aURL);
     xhr.responseType = "json";
     xhr.overrideMimeType("application/json");
     if (aDataType) {
-      xhr.setRequestHeader("Content-Type", aDataType);
+      xhr.setRequestHeader("Content-Type", aDataType); // Note that this requires 
       xhr.setRequestHeader("Content-Length", aData.length);
     }
-    xhr.onload = function (evt) {
+
+    xhr.onload = function (aEvt) {
       debug("sendXHR. XHR success");
       // Error control is for other people... :P
       if (aSuccessCallback) {  
         aSuccessCallback(xhr.response);
       }
     }
-    xhr.onerror = function (evt) {
-      debug("sendXHR. XHR failed " + JSON.stringify(evt) + "url: "+ aURL + " Data: " + aData + " RC: " + xhr.responseCode);
+
+    xhr.onerror = function (aEvt) {
+      debug("sendXHR. XHR failed " + JSON.stringify(aEvt) + "url: "+ aURL + " Data: " + aData + " RC: " + xhr.responseCode);
       if (aFailureCallback) {
-        aFailureCallback(evt);
+        aFailureCallback(aEvt);
       }
     }
+
     xhr.send(aData);    
   }
 
 //////////////////////////////////////////////////////////////////////////////
-// This exist so I don't have to keep remembering how to do it...
+// This exists only so I don't have to keep remembering how to do it...
 //////////////////////////////////////////////////////////////////////////////
-  function addText(elem,text) {
-
-    elem.appendChild(document.createTextNode(text));
+  function addText(aElem, aText) {
+    aElem.appendChild(document.createTextNode(aText));
   }
 
-    function createElementAt(mainBody, type, attrs, optionalText, optionalImg, before) {
+  function createElementAt(aMainBody, aType, aAttrs, aOptionalText, aOptionalImg, aBefore) {
+    var elem = document.createElement(aType);
 
-    var elem = document.createElement(type);
-
-    //elem.setAttribute("id", id);
-    //because I need to write in english there are no comments
-    if (attrs){
-      for (var i in attrs){
-        elem.setAttribute(i, attrs[i]);
+    // Add all the requested attributes
+    if (aAttrs){
+      for (var i in aAttrs){
+        elem.setAttribute(i, aAttrs[i]);
       }        
     }
-    if (!before) {
-        mainBody.appendChild(elem);
+
+    if (!aBefore) {
+      aMainBody.appendChild(elem);
     } else {
-        mainBody.insertBefore(elem,before);
+      mainBody.insertBefore(elem, aBefore);
     }
-    if (optionalText) {
-        addText(elem,optionalText);
+
+    if (aOptionalText) {
+      addText(elem, aOptionalText);
     }
+
     return elem;
   }
+
 //////////////////////////////////////////////////////////////////////////////
 // End of useful DOM manipulation...
 //////////////////////////////////////////////////////////////////////////////

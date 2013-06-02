@@ -1,31 +1,42 @@
 var TokesServer = (function() {
 
   'use strict';
+
   // Toggle this if/when the server side is installed
   //  var server = undefined;
-  var server = "http://sigsegv.es:8123";
+  // This one should work but there's no warranty though. Better to use your own one
+  // see https://github.com/TelefonicaPushServer/example_tokes_simplepush_server for the server code
+  var server = "http://push.sigsegv.es:8123";
 
-  var debugTServer = true,
-      debug = debugTServer?Utils.debug.bind(undefined,'tsimplepush:TokesServer'):function () { };
+  var debugTServer = true;
+
+  var debug = debugTServer?Utils.debug.bind(undefined,'tsimplepush:TokesServer'):function () { };
 
   function isConfigured() {
-
     return (server != null && server != undefined && server != "");
   }
 
-  function sendEndpointToServer(aSelfNick, aNick, aEndpoint) {
-
+  function sendEndpoint(aSelfNick, aNick, aEndpoint) {
     // should URLize aSelfNick, aNick and aEndPoint... definitely aEndpoint
     var dataToSend = 'endpoint=' + aEndpoint;
-    debug ("Sending " + dataToSend + "to " + server + " (or I will someday anyway) ");
+    debug ("Sending PUT " + dataToSend + "to " + server );
     if (server) {
       Utils.sendXHR("PUT", server + "/friend/" + encodeURIComponent(aNick) + "/" + 
                            encodeURIComponent(aSelfNick), dataToSend);
     }
   }
 
-  function loadMyRemoteFriends(aSelfNick, aSuccessCallback, aFailureCallback) {
+  function eraseEndpoint(aSelfNick, aNick, aEndpoint, aSuccessCallback, aFailureCallback) {
+    // should URLize aSelfNick, aNick and aEndPoint... definitely aEndpoint
+    var dataToSend = 'endpoint=' + aEndpoint;
+    debug ("Sending DELETE " + dataToSend + " to " + server );
+    if (server) {
+      Utils.sendXHR("DELETE", server + "/friend/" + encodeURIComponent(aNick) + "/" + 
+                           encodeURIComponent(aSelfNick), dataToSend, aSuccessCallback, aFailureCallback);
+    }
+  }
 
+  function loadMyRemoteFriends(aSelfNick, aSuccessCallback, aFailureCallback) {
     // To-Do: This should load the data remotely... if the server is configured and up
     if (isConfigured()) { // Server side not done yet
       Utils.sendXHR("GET", server + "/friend/" + encodeURIComponent(aSelfNick), null, 
@@ -51,16 +62,16 @@ var TokesServer = (function() {
   }
 
   function saveFriendsToRemote(aSelfNick, aFriendList) {
-
     for (var i in aFriendList) {
-      sendEndpointToServer(aSelfNick, aFriendList[i].nick, aFriendList[i].endpoint);
+      sendEndpoint(aSelfNick, aFriendList[i].nick, aFriendList[i].endpoint);
     }
   }
 
   return {
-    sendEndpointToServer: sendEndpointToServer,
+    sendEndpoint: sendEndpoint,
     saveFriendsToRemote: saveFriendsToRemote,
     loadMyRemoteFriends: loadMyRemoteFriends,
+    eraseEndpoint: eraseEndpoint,
     isConfigured: isConfigured
   }
 
