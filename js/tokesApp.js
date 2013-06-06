@@ -92,9 +92,7 @@ var TokesApp = (function () {
         }
       );
       asideErase.onclick = function () {
-        // TO-DO TO-DO. LEFT IT HERE. ERASE THE FRIEND!!!
-        eraseLocalFriend(arguments[0]);
-        
+        eraseLocalFriend(arguments[0]);        
       }.bind(undefined, aFriend.nick);
     }
     // And finally the name
@@ -127,7 +125,11 @@ var TokesApp = (function () {
     function eraseFromDb(aUnregisterSuccess) {
       // Ignoring aUnregisterSuccess for the time being
       PushDb.eraseEP(myFriends[i].endpoint, function () {
-        delete myFriends[i];
+        if (myFriends[i].remoteEndpoint === undefined) {
+          delete myFriends[i];
+        } else {
+          myFriends[i].endpoint = undefined;
+        }
         updateFriendList(); // Programmer efficiency FTW :P
       });
     }
@@ -225,16 +227,6 @@ var TokesApp = (function () {
     selfNickField.value = selfNick;
   }
 
-  function onRemoveFriendClick(evt) {
-    if (evt && evt.preventDefault) {
-      evt.preventDefault();
-    }
-   
-    var aNick = friendNickField.value;
-    // TO-DO
-   // Push.removeEndpoint(
-  }
-
   function onAddFriendClick(evt) {
     if (evt && evt.preventDefault) {
       evt.preventDefault();
@@ -276,8 +268,21 @@ var TokesApp = (function () {
 
     // Register the push handler
     // TO-DO TO-DO TO-DO: Add the push-register handler here!!!
-    Push.setPushHandlers(function (e) {
-      processNotification(e.pushEndpoint);
+    Push.setPushHandlers(function (e) { processNotification(e.pushEndpoint);}, 
+                         function (e) { processPushRegister(e);});
+  }
+
+  function processPushRegister(e) {  
+    PushDb.getRegisteredNicks(function(internalFriends) {
+      for (var i in internalFriends) {
+        //This verification should no be necessary, if it doesn't have an ep then it will not be in db.
+        //But it doesn't hurt either
+        if (internalFriends[i].endpoint !== undefined) {
+          PushDb.eraseEP(internalFriends[i].endpoint, function() {
+             Push.getNewEndpoint(true, addFriendEP.bind(undefined, internalFriends[i].nick));
+          });          
+        }          
+      }
     });
   }
 
@@ -306,6 +311,7 @@ var TokesApp = (function () {
     });
   }
 
+  
   return {
     init: init,
     setSelfNick: setSelfNick,

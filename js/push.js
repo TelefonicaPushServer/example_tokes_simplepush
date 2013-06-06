@@ -45,12 +45,12 @@ var Push = (function() {
       var req = navigator.push.unregister(aEndpoint);
 
       req.onsuccess = function(e) {
-        debug("EP " + ep + " unregister");
         aCallback(true);
       };
 
       req.onerror = function(e){
         debug("Error unregistering endpoint: " + JSON.stringify(e));
+        aCallback(false);
       };
     } else {
       debug("Unregister Push is not enabled!!!");
