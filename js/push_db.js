@@ -7,15 +7,15 @@ var PushDb = (function () {
   var DB_NAME = 'tsimplepush_db_test';
   var DB_VERSION = 1.0;
   var DB_TNAME = 'pushEndpoints';
-                
+
   var SELF_EP = 'ep_self';
 
   var debugPushDb = true;
-  
+
   var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
 
   var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
-  var database = null;               
+  var database = null;
 
   function init(db_name, version) {
     var dbHandle = indexedDB.open(db_name, version);
@@ -30,7 +30,7 @@ var PushDb = (function () {
     };
 
     dbHandle.onupgradeneeded = function (event) {
-      // For this version I will create just one of object store to keep track of 
+      // For this version I will create just one of object store to keep track of
       // the different pushendpoints I've registered
       // Oh and I'm happily assuming that the operation is always a create.
       debug("IDB.open.onupgrade called");
@@ -42,7 +42,7 @@ var PushDb = (function () {
       }
     }
   };
-  
+
   // pushTable should have a valid IDBDatabase for these methods to work...
   // otherwise they'll happily fail.
   function getNickForEP(aEndpoint, aCallback) {
@@ -67,7 +67,7 @@ var PushDb = (function () {
     eraseRequest.onerror = function () {
       debug("eraseEP: delete.onerror called" + eraseRequest.error.name);
     };
-    
+
   }
 
   // Exercise for the reader: I should probably store the remote endpoints also at some point
@@ -75,9 +75,9 @@ var PushDb = (function () {
   function setNickForEP(aEndpoint, aNick, aRemoteEndpoint, aCallback) {
     var putRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).put(
       {
-        endpoint: aEndpoint, 
-        nick: aNick, 
-        remoteEndpoint: aRemoteEndpoint 
+        endpoint: aEndpoint,
+        nick: aNick,
+        remoteEndpoint: aRemoteEndpoint
       }
     );
     if (aCallback) {

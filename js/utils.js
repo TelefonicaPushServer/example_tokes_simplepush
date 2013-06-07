@@ -17,14 +17,14 @@ var Utils = (function() {
     xhr.responseType = "json";
     xhr.overrideMimeType("application/json");
     if (aDataType) {
-      xhr.setRequestHeader("Content-Type", aDataType); // Note that this requires 
+      xhr.setRequestHeader("Content-Type", aDataType); // Note that this requires
       xhr.setRequestHeader("Content-Length", aData.length);
     }
 
     xhr.onload = function (aEvt) {
       debug("sendXHR. XHR success");
       // Error control is for other people... :P
-      if (aSuccessCallback) {  
+      if (aSuccessCallback) {
         aSuccessCallback(xhr.response);
       }
     }
@@ -36,7 +36,7 @@ var Utils = (function() {
       }
     }
 
-    xhr.send(aData);    
+    xhr.send(aData);
   }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ var Utils = (function() {
     if (aAttrs){
       for (var i in aAttrs){
         elem.setAttribute(i, aAttrs[i]);
-      }        
+      }
     }
 
     if (!aBefore) {

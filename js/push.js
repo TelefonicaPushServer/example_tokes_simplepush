@@ -21,7 +21,7 @@ var Push = (function() {
     if (pushEnabled) {
       var self = this;
       var req = navigator.push.register();
-      
+
       req.onsuccess = function(e) {
           var endpoint = req.result;
           debug("New endpoint: " + endpoint );
@@ -30,7 +30,7 @@ var Push = (function() {
 
       req.onerror = function(e) {
         debug("Error getting a new endpoint: " + JSON.stringify(e));
-      }        
+      }
     } else {
       // No push on the DOM, just simulate it and be done...
       debug ("Push is not enabled!!!");
@@ -55,15 +55,15 @@ var Push = (function() {
     } else {
       debug("Unregister Push is not enabled!!!");
       aCallback(false);
-    }    
+    }
   }
 
   function sendPushTo(aEndpoint) {
     // We can do this even if the platform doesn't support push. We cannot receive
     // but we can still send notifications...
-    Utils.sendXHR('PUT', aEndpoint, "version=" + new Date().getTime(), 
+    Utils.sendXHR('PUT', aEndpoint, "version=" + new Date().getTime(),
                   function (e) { debug("Push successfully sent to " + aEndpoint);},
-                  function (e) { debug("Got an error while sending a push notification to " + aEndpoint + ": " + 
+                  function (e) { debug("Got an error while sending a push notification to " + aEndpoint + ": " +
                                        JSON.stringify(e));});
   }
 
@@ -73,8 +73,8 @@ var Push = (function() {
       aPushRegisterHandler &&  window.navigator.mozSetMessageHandler('push-register', aPushRegisterHandler);
     } // Else?...
   }
-    
-    
+
+
   return {
     sendPushTo: sendPushTo,
     isPushEnabled: isPushEnabled,

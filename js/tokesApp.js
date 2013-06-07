@@ -12,7 +12,7 @@ var TokesApp = (function () {
   var Server = TokesServer;
 
   var self = this;
-    
+
   var selfNick = "";
 
   // Form elements and the rest...
@@ -24,7 +24,6 @@ var TokesApp = (function () {
   var friendsContainer = null;
   var friendNickField = null;
 
-//  var IMG_SEND = "style/icons/send@2x.png";
   var IMG_SEND = "style/icons/out.jpg";
   var IMG_ERASE = "style/icons/clear.png";
 
@@ -41,16 +40,16 @@ var TokesApp = (function () {
     return false;
   }
 
-  /** 
+  /**
    *  What should the LI have? something like
    *  <aside class="pack-end"> <!-- only if it's a local friend -->
    *    <img alt="placeholder" src="erase.jpg" onclick="eraseFriend">
    *  </aside>
-   *  <aside class="icon"> 
+   *  <aside class="icon">
    *    <img src="typeoffriend.jpg">
    *  </aside>
    *  <p onclick="sendToke"> Friend Nick </p>
-   * 
+   *
    */
 
   function createLIContent(aUl, aFriend) {
@@ -59,14 +58,14 @@ var TokesApp = (function () {
     // Add the send button...
     var sendToke = undefined;
     if (aFriend.remoteEndpoint) {
-      var asideTOF = Utils.createElementAt(li, "aside", 
-        { 
+      var asideTOF = Utils.createElementAt(li, "aside",
+        {
           id: "aside-tof-nick-" + aFriend.nick
         }
       );
-      var imgTOF = Utils.createElementAt(asideTOF, "img", 
+      var imgTOF = Utils.createElementAt(asideTOF, "img",
         {
-          id: "img-nick-" + aFriend.nick, 
+          id: "img-nick-" + aFriend.nick,
           src: IMG_SEND
         }
       );
@@ -74,25 +73,25 @@ var TokesApp = (function () {
         debug("Somebody clicked! Sending Toke to " + arguments[1] + " on " + arguments[0]);
         Push.sendPushTo(arguments[0]);
       }.bind(undefined, aFriend.remoteEndpoint, aFriend.nick);
-      asideTOF.onclick = sendToke; 
+      asideTOF.onclick = sendToke;
     }
 
     // Add the erase button
     if (aFriend.endpoint){
-      var asideErase = Utils.createElementAt(li, "aside", 
+      var asideErase = Utils.createElementAt(li, "aside",
           {
-            id: "aside-erase-nick-" + aFriend.nick, 
+            id: "aside-erase-nick-" + aFriend.nick,
             "class": "pack-end"
           }
       );
-      var imgErase = Utils.createElementAt(asideErase, "img", 
-        { 
-          id: "img-nick-" + aFriend.nick, 
+      var imgErase = Utils.createElementAt(asideErase, "img",
+        {
+          id: "img-nick-" + aFriend.nick,
           src: IMG_ERASE
         }
       );
       asideErase.onclick = function () {
-        eraseLocalFriend(arguments[0]);        
+        eraseLocalFriend(arguments[0]);
       }.bind(undefined, aFriend.nick);
     }
     // And finally the name
@@ -115,7 +114,7 @@ var TokesApp = (function () {
     return undefined;
   }
 
-  // This should: 
+  // This should:
   // 1. Erase the remote endpoint
   // 2. Unregister the endpoint
   // 3. Erase the endpoint from the local friend (and from the database)
@@ -139,7 +138,7 @@ var TokesApp = (function () {
     }
   }
 
-  
+
   /**
    * What I'll have on the HTML:
    * <ul id='all-friends-lists' class="whatever">
@@ -149,8 +148,8 @@ var TokesApp = (function () {
   function updateFriendList() {
     // I could prolly do this on a nicer way, but this works also...
     friendsContainer.innerHTML = '';
-    
-    // The way this works is: 
+
+    // The way this works is:
     var ul = Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
     for (var i in myFriends) {
       createLIContent(ul, myFriends[i]);
@@ -158,21 +157,23 @@ var TokesApp = (function () {
   }
 
   function addFriendEP(aNick, aEndpoint) {
-    var ul = document.getElementById("ul-friend-list") || Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
+    var ul = document.getElementById("ul-friend-list") || 
+             Utils.createElementAt(friendsContainer, "ul", {id:"ul-friend-list"});
     PushDb.setNickForEP(aEndpoint, aNick);
     Server.sendEndpoint(selfNick, aNick, aEndpoint);
     var i = getFriendFromList(aNick);
-    if (i !== undefined) {
+    if (i !== undefined) { 
       myFriends[i].endpoint = aEndpoint;
+      updateFriendList();
     } else {
       var newFriend = {
           nick: aNick,
           endpoint: aEndpoint,
           remoteEndpoint: undefined
-      }; 
+      };
       myFriends.push(newFriend);
       createLIContent(ul, newFriend);
-    }    
+    }
   }
 
   function mixFriends(myRemoteFriends) {
@@ -188,13 +189,13 @@ var TokesApp = (function () {
         // So tough luck...
         // I could use a trick here but let's leave that for V2. Or for the reader. Whatever.
         myFriends.push({
-          nick: myRemoteFriends[i].nick, 
-          remoteEndpoint: myRemoteFriends[i].endpoint, 
+          nick: myRemoteFriends[i].nick,
+          remoteEndpoint: myRemoteFriends[i].endpoint,
           endpoint: undefined
         });
       }
-    }    
-    updateFriendList();    
+    }
+    updateFriendList();
   }
 
   // Self explanatory :P
@@ -213,7 +214,7 @@ var TokesApp = (function () {
       myFriends = internalFriends;
       Server.saveFriendsToRemote(selfNick, myFriends);
       Server.loadMyRemoteFriends(selfNick, mixFriends, updateFriendList);
-    });    
+    });
   }
 
   function setSelfNick(aNick) {
@@ -233,7 +234,7 @@ var TokesApp = (function () {
     }
     var aNick = friendNickField.value;
     // If this fails this isn't going to be funny
-    friendNickField.value = ""; 
+    friendNickField.value = "";
     addFriendButton.disabled = true;
 
     if (isAlreadyAFriend(aNick)) {
@@ -267,12 +268,11 @@ var TokesApp = (function () {
     friendNickField.addEventListener('input', onFriendNickChange);
 
     // Register the push handler
-    // TO-DO TO-DO TO-DO: Add the push-register handler here!!!
-    Push.setPushHandlers(function (e) { processNotification(e.pushEndpoint);}, 
+    Push.setPushHandlers(function (e) { processNotification(e.pushEndpoint);},
                          function (e) { processPushRegister(e);});
   }
 
-  function processPushRegister(e) {  
+  function processPushRegister(e) {
     PushDb.getRegisteredNicks(function(internalFriends) {
       for (var i in internalFriends) {
         //This verification should no be necessary, if it doesn't have an ep then it will not be in db.
@@ -280,8 +280,8 @@ var TokesApp = (function () {
         if (internalFriends[i].endpoint !== undefined) {
           PushDb.eraseEP(internalFriends[i].endpoint, function() {
              Push.getNewEndpoint(true, addFriendEP.bind(undefined, internalFriends[i].nick));
-          });          
-        }          
+          });
+        }
       }
     });
   }
@@ -289,8 +289,8 @@ var TokesApp = (function () {
   function processNotification(aEndpoint) {
     // This should work on an uninitialized app...
     PushDb.getNickForEP(aEndpoint,function (aValue) {
-      if (aValue && aValue.nick) {        
-        var notification = window.navigator.mozNotification.createNotification('Tokes App', 
+      if (aValue && aValue.nick) {
+        var notification = window.navigator.mozNotification.createNotification('Tokes App',
                                'Got a Toke from ' + aValue.nick);
 
         notification.onclick = function test_notificationClick() {
@@ -303,7 +303,7 @@ var TokesApp = (function () {
             app.launch('push');
           };
            */
-        };      
+        };
         notification.show();
       } else {
         debug("Got an unexpected notification!");
@@ -311,7 +311,7 @@ var TokesApp = (function () {
     });
   }
 
-  
+
   return {
     init: init,
     setSelfNick: setSelfNick,

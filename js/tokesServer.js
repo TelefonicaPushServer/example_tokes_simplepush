@@ -21,7 +21,7 @@ var TokesServer = (function() {
     var dataToSend = 'endpoint=' + aEndpoint;
     debug ("Sending PUT " + dataToSend + "to " + server );
     if (server) {
-      Utils.sendXHR("PUT", server + "/friend/" + encodeURIComponent(aNick) + "/" + 
+      Utils.sendXHR("PUT", server + "/friend/" + encodeURIComponent(aNick) + "/" +
                            encodeURIComponent(aSelfNick), dataToSend);
     }
   }
@@ -31,7 +31,7 @@ var TokesServer = (function() {
     var dataToSend = 'endpoint=' + aEndpoint;
     debug ("Sending DELETE " + dataToSend + " to " + server );
     if (server) {
-      Utils.sendXHR("DELETE", server + "/friend/" + encodeURIComponent(aNick) + "/" + 
+      Utils.sendXHR("DELETE", server + "/friend/" + encodeURIComponent(aNick) + "/" +
                            encodeURIComponent(aSelfNick), dataToSend, aSuccessCallback, aFailureCallback);
     }
   }
@@ -39,12 +39,12 @@ var TokesServer = (function() {
   function loadMyRemoteFriends(aSelfNick, aSuccessCallback, aFailureCallback) {
     // To-Do: This should load the data remotely... if the server is configured and up
     if (isConfigured()) { // Server side not done yet
-      Utils.sendXHR("GET", server + "/friend/" + encodeURIComponent(aSelfNick), null, 
+      Utils.sendXHR("GET", server + "/friend/" + encodeURIComponent(aSelfNick), null,
                      aSuccessCallback, aFailureCallback);
     } else {
         // Simulation FTW!
       var myRemoteFriends = [
-        { 
+        {
           nick: "joselito",
           endpoint: "ep_joselito"
         },
