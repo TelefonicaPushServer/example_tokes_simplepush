@@ -1,25 +1,25 @@
 // Let's take all the indexeddb related things here so the other part is cleaner
 
-'use strict';
-
 var PushDb = (function () {
+
+  'use strict';
+
   var DB_NAME = 'tsimplepush_db_test';
   var DB_VERSION = 1.0;
   var DB_TNAME = 'pushEndpoints';
-                
-  var SELF_EP = 'ep_self';
 
+  var SELF_EP = 'ep_self';
 
   var debugPushDb = true;
 
-  var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
-  var database = null;
-                
   var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
 
-  function init(db_name, version) {
+  var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
+  var database = null;
 
+  function init(db_name, version) {
     var dbHandle = indexedDB.open(db_name, version);
+
     dbHandle.onsuccess = function (event) {
       debug("IDB.open.onsuccess called");
       database = dbHandle.result;
@@ -30,7 +30,7 @@ var PushDb = (function () {
     };
 
     dbHandle.onupgradeneeded = function (event) {
-      // For this version I will create just one of object store to keep track of 
+      // For this version I will create just one of object store to keep track of
       // the different pushendpoints I've registered
       // Oh and I'm happily assuming that the operation is always a create.
       debug("IDB.open.onupgrade called");
@@ -43,7 +43,6 @@ var PushDb = (function () {
     }
   };
 
-  
   // pushTable should have a valid IDBDatabase for these methods to work...
   // otherwise they'll happily fail.
   function getNickForEP(aEndpoint, aCallback) {
@@ -58,12 +57,29 @@ var PushDb = (function () {
     };
   };
 
+  function eraseEP(aEndpoint, aCallback) {
+    var eraseRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).delete(aEndpoint);
+
+    eraseRequest.onsuccess = function () {
+      aCallback(eraseRequest.result);
+    };
+
+    eraseRequest.onerror = function () {
+      debug("eraseEP: delete.onerror called" + eraseRequest.error.name);
+    };
+
+  }
 
   // Exercise for the reader: I should probably store the remote endpoints also at some point
   // If only so I can safely kill the server once the system is setup
   function setNickForEP(aEndpoint, aNick, aRemoteEndpoint, aCallback) {
-    var putRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).
-      put({endpoint: aEndpoint, nick: aNick, remoteEndpoint: aRemoteEndpoint });
+    var putRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).put(
+      {
+        endpoint: aEndpoint,
+        nick: aNick,
+        remoteEndpoint: aRemoteEndpoint
+      }
+    );
     if (aCallback) {
       putRequest.onsuccess = function () {
         aCallback();
@@ -84,8 +100,9 @@ var PushDb = (function () {
         var getReq = store.get(cursor.key);
         getReq.onsuccess = function () {
           // Don't add myself to the list
-          if (getReq.result.endpoint != SELF_EP)
+          if (getReq.result.endpoint != SELF_EP) {
             returnedValue.push(getReq.result);
+          }
           cursor.continue();
         };
       }
@@ -102,6 +119,7 @@ var PushDb = (function () {
   return {
     getNickForEP: getNickForEP,
     setNickForEP: setNickForEP,
+    eraseEP: eraseEP,
     getSelfNick: getNickForEP.bind(undefined,SELF_EP),
     setSelfNick: setNickForEP.bind(undefined,SELF_EP),
     getRegisteredNicks: getRegisteredNicks,
