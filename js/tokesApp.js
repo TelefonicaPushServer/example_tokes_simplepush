@@ -17,6 +17,7 @@ var TokesApp = (function () {
 
   // Form elements and the rest...
   var selfNickField = null;
+  var serverField = null;
   var loginButton = null;
   var mainWrapper = null;
   var selfNickWrapper = null;
@@ -208,8 +209,14 @@ var TokesApp = (function () {
       selfNick = selfNickField.value;
       PushDb.setSelfNick(selfNick);
     }
+    if (serverField.value !== Server.friendServer) {
+      Server.friendServer = serverField.value;
+      PushDb.setFriendServer(serverField.value);
+    }
     selfNickWrapper.style.display = 'none';
     mainWrapper.style.display = '';
+    document.getElementById("header-text").textContent = "TokesApp (" + selfNick + ")";
+
     PushDb.getRegisteredNicks(function (internalFriends) {
       myFriends = internalFriends;
       Server.saveFriendsToRemote(selfNick, myFriends);
@@ -217,15 +224,29 @@ var TokesApp = (function () {
     });
   }
 
+  function setLoginField(aField, aValue, aDefaultValue) {
+    debug("setLoginField called with: " + JSON.stringify(aValue));
+    var aux;
+    if (aValue && aValue.nick) {
+      debug("setting field to " + aValue.nick);
+      aux = aValue.nick;
+    } else {
+      aux = aDefaultValue;
+    }
+    aField.value = aux;
+    return aux;
+  }
+
+
   function setSelfNick(aNick) {
     debug("setSelfNick called with: " + JSON.stringify(aNick));
-    if (aNick && aNick.nick) {
-      debug("setting selfNick to " + aNick.nick);
-      selfNick = aNick.nick;
-    } else {
-      selfNick = "";
-    }
-    selfNickField.value = selfNick;
+    selfNick = setLoginField(selfNickField, aNick, "");
+  }
+
+
+  function setFriendServer(aServer) {
+    debug("setFriendServer called with: " + JSON.stringify(aServer));
+    setLoginField(serverField, aServer, Server.friendServer);
   }
 
   function onAddFriendClick(evt) {
@@ -254,6 +275,7 @@ var TokesApp = (function () {
 
     selfNickField = document.getElementById("self-nick");
     loginButton = document.getElementById("login-button");
+    serverField = document.getElementById("server");
     addFriendButton = document.getElementById("add-friend-button");
     mainWrapper = document.getElementById("main-window");
     friendsContainer = document.getElementById("friends-container");
@@ -315,6 +337,7 @@ var TokesApp = (function () {
   return {
     init: init,
     setSelfNick: setSelfNick,
+    setFriendServer: setFriendServer,
     processNotification: processNotification
 
   }
@@ -323,6 +346,10 @@ var TokesApp = (function () {
 
 window.addEventListener('load', function showBody() {
   console.log("loadHandler called");
-  TokesApp.init();
-  PushDb.getSelfNick(TokesApp.setSelfNick);
+  PushDb.initDB(function () {
+    TokesApp.init();
+    PushDb.getSelfNick(TokesApp.setSelfNick);
+    PushDb.getFriendServer(TokesApp.setFriendServer);
+  });
+
 });

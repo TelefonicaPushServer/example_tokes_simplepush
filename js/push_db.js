@@ -4,11 +4,14 @@ var PushDb = (function () {
 
   'use strict';
 
-  var DB_NAME = 'tsimplepush_db_test';
+  var DB_NAME = 'tsimplepush_db_test_2';
   var DB_VERSION = 1.0;
   var DB_TNAME = 'pushEndpoints';
 
   var SELF_EP = 'ep_self';
+  // Now this is taking the database maybe a little bit too far
+  // But I don't really feel like adding another table just for this
+  var FRIEND_SERVER = 'ep_friendServer';
 
   var debugPushDb = true;
 
@@ -17,12 +20,14 @@ var PushDb = (function () {
   var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
   var database = null;
 
-  function init(db_name, version) {
+  function init(db_name, version, aCallback) {
+
     var dbHandle = indexedDB.open(db_name, version);
 
     dbHandle.onsuccess = function (event) {
-      debug("IDB.open.onsuccess called");
+      debug("IDB.open.onsuccess called: " + dbHandle.result);
       database = dbHandle.result;
+      aCallback();
     };
 
     dbHandle.onerror = function(event) {
@@ -99,8 +104,8 @@ var PushDb = (function () {
       } else {
         var getReq = store.get(cursor.key);
         getReq.onsuccess = function () {
-          // Don't add myself to the list
-          if (getReq.result.endpoint != SELF_EP) {
+          // Don't add myself or the server to the list
+          if ((getReq.result.endpoint != SELF_EP) && (getReq.result.endpoint != FRIEND_SERVER)) {
             returnedValue.push(getReq.result);
           }
           cursor.continue();
@@ -114,16 +119,21 @@ var PushDb = (function () {
     store.clear();
   }
 
-  init(DB_NAME, DB_VERSION);
+  function initDB(aCallback) {
+    init(DB_NAME, DB_VERSION, aCallback);
+  }
 
   return {
     getNickForEP: getNickForEP,
     setNickForEP: setNickForEP,
     eraseEP: eraseEP,
-    getSelfNick: getNickForEP.bind(undefined,SELF_EP),
-    setSelfNick: setNickForEP.bind(undefined,SELF_EP),
+    getSelfNick: getNickForEP.bind(undefined, SELF_EP),
+    setSelfNick: setNickForEP.bind(undefined, SELF_EP),
+    getFriendServer: getNickForEP.bind(undefined, FRIEND_SERVER),
+    setFriendServer: setNickForEP.bind(undefined, FRIEND_SERVER),
     getRegisteredNicks: getRegisteredNicks,
-    clearDB: clearDB
+    clearDB: clearDB,
+    initDB: initDB
   };
 
 })();
