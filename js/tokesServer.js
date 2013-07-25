@@ -2,6 +2,8 @@ var TokesServer = (function() {
 
   'use strict';
 
+  // Toggle this if/when the server side is installed
+  //  var server = undefined;
   // This one should work but there's no warranty though. Better to use your own one
   // see https://github.com/TelefonicaPushServer/example_tokes_simplepush_server for the server code
   var server = "http://push.sigsegv.es:8123";
@@ -66,17 +68,17 @@ var TokesServer = (function() {
   }
 
   return {
+    sendEndpoint: sendEndpoint,
     get friendServer() {
       return server;
     },
     set friendServer(aServer) {
       server = aServer;
     },
-    sendEndpointToServer: sendEndpointToServer,
     saveFriendsToRemote: saveFriendsToRemote,
     loadMyRemoteFriends: loadMyRemoteFriends,
     eraseEndpoint: eraseEndpoint,
     isConfigured: isConfigured
-  };
+  }
 
 })();
