@@ -1,6 +1,6 @@
 // The main flow of the app goes here...
 
-var TokesApp = (function () {
+var TokesApp = (function() {
 
   'use strict';
 
@@ -91,7 +91,7 @@ var TokesApp = (function () {
           src: IMG_ERASE
         }
       );
-      asideErase.onclick = function () {
+      asideErase.onclick = function() {
         eraseLocalFriend(arguments[0]);
       }.bind(undefined, aFriend.nick);
     }
@@ -124,7 +124,7 @@ var TokesApp = (function () {
     var i = getFriendFromList(aNick);
     function eraseFromDb(aUnregisterSuccess) {
       // Ignoring aUnregisterSuccess for the time being
-      PushDb.eraseEP(myFriends[i].endpoint, function () {
+      PushDb.eraseEP(myFriends[i].endpoint, function() {
         if (myFriends[i].remoteEndpoint === undefined) {
           delete myFriends[i];
         } else {
@@ -346,7 +346,7 @@ var TokesApp = (function () {
 
 window.addEventListener('load', function showBody() {
   console.log("loadHandler called");
-  PushDb.initDB(function () {
+  PushDb.initDB(function() {
     TokesApp.init();
     PushDb.getSelfNick(TokesApp.setSelfNick);
     PushDb.getFriendServer(TokesApp.setFriendServer);
