@@ -1,6 +1,6 @@
 // Let's take all the indexeddb related things here so the other part is cleaner
 
-var PushDb = (function () {
+var PushDb = (function() {
 
   'use strict';
 
@@ -15,7 +15,7 @@ var PushDb = (function () {
 
   var debugPushDb = true;
 
-  var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
+  var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function() { };
 
   var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
   var database = null;
@@ -53,11 +53,11 @@ var PushDb = (function () {
   function getNickForEP(aEndpoint, aCallback) {
     var getRequest = database.transaction(DB_TNAME,'readonly').objectStore(DB_TNAME).get(aEndpoint);
 
-    getRequest.onsuccess = function () {
+    getRequest.onsuccess = function() {
         aCallback(getRequest.result);
     };
 
-    getRequest.onerror = function () {
+    getRequest.onerror = function() {
       debug("getNickForEP: get.onerror called" + getRequest.error.name);
     };
   };
@@ -65,11 +65,11 @@ var PushDb = (function () {
   function eraseEP(aEndpoint, aCallback) {
     var eraseRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).delete(aEndpoint);
 
-    eraseRequest.onsuccess = function () {
+    eraseRequest.onsuccess = function() {
       aCallback(eraseRequest.result);
     };
 
-    eraseRequest.onerror = function () {
+    eraseRequest.onerror = function() {
       debug("eraseEP: delete.onerror called" + eraseRequest.error.name);
     };
 
@@ -86,7 +86,7 @@ var PushDb = (function () {
       }
     );
     if (aCallback) {
-      putRequest.onsuccess = function () {
+      putRequest.onsuccess = function() {
         aCallback();
       };
     }
@@ -96,16 +96,16 @@ var PushDb = (function () {
     var returnedValue = [];
     var store = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME);
     var readAllReq = store.openCursor();
-    readAllReq.onsuccess = function () {
+    readAllReq.onsuccess = function() {
       debug ("getRegisteredNicks: readAllReq.onsuccess called");
       var cursor = readAllReq.result;
       if (!cursor) {
         aCallback(returnedValue);
       } else {
         var getReq = store.get(cursor.key);
-        getReq.onsuccess = function () {
+        getReq.onsuccess = function() {
           // Don't add myself or the server to the list
-          if ((getReq.result.endpoint != SELF_EP) && (getReq.result.endpoint != FRIEND_SERVER)) {
+          if ((getReq.result.endpoint !== SELF_EP) && (getReq.result.endpoint !== FRIEND_SERVER)) {
             returnedValue.push(getReq.result);
           }
           cursor.continue();
