@@ -1,28 +1,33 @@
 // Let's take all the indexeddb related things here so the other part is cleaner
 
-var PushDb = (function () {
+var PushDb = (function() {
 
   'use strict';
 
-  var DB_NAME = 'tsimplepush_db_test';
+  var DB_NAME = 'tsimplepush_db_test_2';
   var DB_VERSION = 1.0;
   var DB_TNAME = 'pushEndpoints';
 
   var SELF_EP = 'ep_self';
+  // Now this is taking the database maybe a little bit too far
+  // But I don't really feel like adding another table just for this
+  var FRIEND_SERVER = 'ep_friendServer';
 
   var debugPushDb = true;
 
-  var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function () { };
+  var debug = debugPushDb?Utils.debug.bind(undefined,"tsimplepush:PushDb"):function() { };
 
   var indexedDB = window.mozIndexedDB || window.webkitIndexedDB || window.indexedDB;
   var database = null;
 
-  function init(db_name, version) {
+  function init(db_name, version, aCallback) {
+
     var dbHandle = indexedDB.open(db_name, version);
 
     dbHandle.onsuccess = function (event) {
-      debug("IDB.open.onsuccess called");
+      debug("IDB.open.onsuccess called: " + dbHandle.result);
       database = dbHandle.result;
+      aCallback();
     };
 
     dbHandle.onerror = function(event) {
@@ -48,11 +53,11 @@ var PushDb = (function () {
   function getNickForEP(aEndpoint, aCallback) {
     var getRequest = database.transaction(DB_TNAME,'readonly').objectStore(DB_TNAME).get(aEndpoint);
 
-    getRequest.onsuccess = function () {
+    getRequest.onsuccess = function() {
         aCallback(getRequest.result);
     };
 
-    getRequest.onerror = function () {
+    getRequest.onerror = function() {
       debug("getNickForEP: get.onerror called" + getRequest.error.name);
     };
   };
@@ -60,11 +65,11 @@ var PushDb = (function () {
   function eraseEP(aEndpoint, aCallback) {
     var eraseRequest = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME).delete(aEndpoint);
 
-    eraseRequest.onsuccess = function () {
+    eraseRequest.onsuccess = function() {
       aCallback(eraseRequest.result);
     };
 
-    eraseRequest.onerror = function () {
+    eraseRequest.onerror = function() {
       debug("eraseEP: delete.onerror called" + eraseRequest.error.name);
     };
 
@@ -81,7 +86,7 @@ var PushDb = (function () {
       }
     );
     if (aCallback) {
-      putRequest.onsuccess = function () {
+      putRequest.onsuccess = function() {
         aCallback();
       };
     }
@@ -91,16 +96,16 @@ var PushDb = (function () {
     var returnedValue = [];
     var store = database.transaction(DB_TNAME,'readwrite').objectStore(DB_TNAME);
     var readAllReq = store.openCursor();
-    readAllReq.onsuccess = function () {
+    readAllReq.onsuccess = function() {
       debug ("getRegisteredNicks: readAllReq.onsuccess called");
       var cursor = readAllReq.result;
       if (!cursor) {
         aCallback(returnedValue);
       } else {
         var getReq = store.get(cursor.key);
-        getReq.onsuccess = function () {
-          // Don't add myself to the list
-          if (getReq.result.endpoint != SELF_EP) {
+        getReq.onsuccess = function() {
+          // Don't add myself or the server to the list
+          if ((getReq.result.endpoint !== SELF_EP) && (getReq.result.endpoint !== FRIEND_SERVER)) {
             returnedValue.push(getReq.result);
           }
           cursor.continue();
@@ -114,16 +119,21 @@ var PushDb = (function () {
     store.clear();
   }
 
-  init(DB_NAME, DB_VERSION);
+  function initDB(aCallback) {
+    init(DB_NAME, DB_VERSION, aCallback);
+  }
 
   return {
     getNickForEP: getNickForEP,
     setNickForEP: setNickForEP,
     eraseEP: eraseEP,
-    getSelfNick: getNickForEP.bind(undefined,SELF_EP),
-    setSelfNick: setNickForEP.bind(undefined,SELF_EP),
+    getSelfNick: getNickForEP.bind(undefined, SELF_EP),
+    setSelfNick: setNickForEP.bind(undefined, SELF_EP),
+    getFriendServer: getNickForEP.bind(undefined, FRIEND_SERVER),
+    setFriendServer: setNickForEP.bind(undefined, FRIEND_SERVER),
     getRegisteredNicks: getRegisteredNicks,
-    clearDB: clearDB
+    clearDB: clearDB,
+    initDB: initDB
   };
 
 })();

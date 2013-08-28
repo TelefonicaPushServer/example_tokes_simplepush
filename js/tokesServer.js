@@ -42,7 +42,7 @@ var TokesServer = (function() {
       Utils.sendXHR("GET", server + "/friend/" + encodeURIComponent(aSelfNick), null,
                      aSuccessCallback, aFailureCallback);
     } else {
-        // Simulation FTW!
+      // Simulation FTW!
       var myRemoteFriends = [
         {
           nick: "joselito",
@@ -69,6 +69,12 @@ var TokesServer = (function() {
 
   return {
     sendEndpoint: sendEndpoint,
+    get friendServer() {
+      return server;
+    },
+    set friendServer(aServer) {
+      server = aServer;
+    },
     saveFriendsToRemote: saveFriendsToRemote,
     loadMyRemoteFriends: loadMyRemoteFriends,
     eraseEndpoint: eraseEndpoint,
